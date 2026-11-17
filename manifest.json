@@ -1,0 +1,19 @@
+{
+  "id": "codecraft",
+  "name": "CodeCraft — Code editor",
+  "short_name": "CodeCraft",
+  "description": "Personal, minimalist, offline code editor with AI assistants.",
+  "lang": "en",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b0c10",
+  "theme_color": "#0f1016",
+  "categories": ["developer", "productivity"],
+  "icons": [
+    { "src": "icon-192.png", "type": "image/png", "sizes": "192x192", "purpose": "any" },
+    { "src": "icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" }
+  ]
+}

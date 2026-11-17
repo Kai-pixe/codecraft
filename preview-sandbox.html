@@ -1,0 +1,11 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<body style="margin:0;background:#fff"></body>
+<script>
+// Página aislada (sin acceso al origen de la app): solo escribe el HTML que le manda el editor.
+addEventListener('message', function (e) {
+  if (e.source !== parent || !e.data || typeof e.data.html !== 'string') return;
+  document.open(); document.write(e.data.html); document.close();
+});
+</script>

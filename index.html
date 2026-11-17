@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://generativelanguage.googleapis.com https://openrouter.ai https://api.github.com http://127.0.0.1:* http://localhost:*; frame-src 'self'; manifest-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="theme-color" content="#0f1016">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Personal, minimalist, offline code editor with AI assistants.">
+  <title>CodeCraft</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Barra de herramientas: los menús y botones los genera app.js -->
+  <header class="toolbar" id="toolbar">
+    <button class="icon-btn" id="btn-files" type="button" data-action="files" aria-label="File explorer" title="Files (Ctrl+B)"></button>
+    <div class="toolbar-brand">CodeCraft</div>
+    <nav class="toolbar-nav" id="menubar" aria-label="Menus"></nav>
+    <div class="toolbar-tools" id="quick-tools"></div>
+  </header>
+
+  <!-- Área de trabajo: [OpenRouter] | [pestañas + código + terminal] | [OpenRouter 2] -->
+  <div class="workbench" id="workbench">
+
+    <nav class="activitybar" id="activitybar" aria-label="Activity bar"></nav>
+
+    <aside class="ai-panel panel-left" id="panel-left" aria-label="Sidebar">
+      <section class="view" data-view="explorer" id="view-explorer">
+        <div class="sidebar-header">
+          <h3>EXPLORER <span class="muted" id="files-count"></span></h3>
+          <button type="button" class="icon-btn sm" data-action="toggle-left" aria-label="Close sidebar" title="Close sidebar"></button>
+        </div>
+        <div class="ex-root" id="drawer-actions"></div>
+        <div class="ex-selbar" id="ex-selbar" hidden></div>
+        <div class="files-list ex-tree" id="files-list" role="tree" tabindex="0" aria-label="Project files"></div>
+        <div class="drawer-foot" id="drawer-foot"></div>
+      </section>
+      <section class="view" data-view="search" id="view-search">
+        <div class="sidebar-header">
+          <h3>Search in files</h3>
+          <button type="button" class="icon-btn sm" data-action="toggle-left" aria-label="Close sidebar" title="Close sidebar"></button>
+        </div>
+        <div class="search-box">
+          <div class="find-row">
+            <input type="text" id="sr-input" autocomplete="off" spellcheck="false" placeholder="Search the whole project" aria-label="Search the whole project">
+            <button type="button" class="chip" id="sr-case" aria-pressed="false" title="Match case">Aa</button>
+            <button type="button" class="chip" id="sr-re" aria-pressed="false" title="Regular expression">.*</button>
+          </div>
+          <div class="dlg-note" id="sr-status"></div>
+        </div>
+        <ul class="qo-list tall" id="sr-list"></ul>
+      </section>
+      <section class="view" data-view="git" id="view-git">
+        <div class="sidebar-header">
+          <h3>Source control</h3>
+          <button type="button" class="icon-btn sm" data-action="toggle-left" aria-label="Close sidebar" title="Close sidebar"></button>
+        </div>
+        <div class="git-body" id="git-body"></div>
+      </section>
+      <section class="view" data-view="workflow" id="view-workflow">
+        <div class="sidebar-header">
+          <h3>Workflows and rules</h3>
+          <button type="button" class="icon-btn sm" data-action="toggle-left" aria-label="Close sidebar" title="Close sidebar"></button>
+        </div>
+        <div class="wf-body" id="wf-body"></div>
+      </section>
+      <section class="view" data-view="openrouter" id="panel-ai-left" aria-label="OpenRouter assistant"></section>
+    </aside>
+    <div class="vhandle" id="h-left" role="separator" aria-orientation="vertical" tabindex="0" aria-label="Resize the sidebar width" title="Drag to resize · double tap to reset"></div>
+
+    <section class="center" id="center">
+      <div class="tabbar">
+        <div class="tabs" id="tabs" role="tablist" aria-label="Open files"></div>
+        <div class="tab-actions" id="tab-actions"></div>
+      </div>
+
+      <!-- Buscar y reemplazar -->
+      <div class="findbar" id="findbar" hidden>
+        <div class="find-row">
+          <input type="text" id="find-input" placeholder="Find" autocomplete="off" spellcheck="false" aria-label="Find">
+          <button type="button" class="chip" id="find-case" aria-pressed="false" title="Match case">Aa</button>
+          <button type="button" class="chip" id="find-re" aria-pressed="false" title="Regular expression">.*</button>
+          <span class="find-count" id="find-count"></span>
+          <button type="button" class="icon-btn sm" id="find-prev" aria-label="Previous" title="Previous (Shift+Enter)">↑</button>
+          <button type="button" class="icon-btn sm" id="find-next" aria-label="Next" title="Next (Enter)">↓</button>
+          <button type="button" class="icon-btn sm" id="find-toggle-repl" aria-label="Show replace" title="Replace (Ctrl+H)">⇄</button>
+          <button type="button" class="icon-btn sm" id="find-close" aria-label="Close find">×</button>
+        </div>
+        <div class="find-row" id="repl-row" hidden>
+          <input type="text" id="repl-input" placeholder="Replace with" autocomplete="off" spellcheck="false" aria-label="Replace with">
+          <button type="button" class="btn btn-ghost sm" id="repl-one">Replace</button>
+          <button type="button" class="btn btn-ghost sm" id="repl-all">All</button>
+        </div>
+      </div>
+
+      <div class="work-row" id="work-row">
+        <div class="editor-wrap" id="editor-wrap">
+          <pre class="gutter" id="gutter" aria-hidden="true">1</pre>
+          <div class="code-area" id="code-area">
+            <pre class="hl" id="hl" aria-hidden="true"><div class="hl-inner" id="hl-inner"></div></pre>
+            <textarea id="code-editor" aria-label="Code editor" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" wrap="off" placeholder="// Start typing your code here..."></textarea>
+          </div>
+          <div class="empty-state" id="empty-state" hidden>
+            <div class="empty-card">
+              <h2 id="empty-title">CodeCraft</h2>
+              <p id="empty-text"></p>
+              <div class="empty-actions" id="empty-actions"></div>
+            </div>
+          </div>
+        </div>
+        <div class="vsplit" id="h-prev" role="separator" aria-orientation="vertical" tabindex="0" aria-label="Resize the preview width" hidden></div>
+        <section class="preview" id="preview" aria-label="Preview" hidden>
+          <div class="preview-head">
+            <span class="term-title">PREVIEW</span>
+            <div class="term-btns" id="preview-btns"></div>
+          </div>
+          <iframe id="preview-frame" title="Project preview" sandbox="allow-scripts allow-forms allow-modals allow-popups"></iframe>
+        </section>
+      </div>
+
+      <div class="hhandle" id="h-term" role="separator" aria-orientation="horizontal" tabindex="0" aria-label="Resize the output height" title="Drag to resize · double tap to reset"></div>
+
+      <!-- Salida (solo lectura) -->
+      <section class="terminal" id="terminal" aria-label="Terminal">
+        <div class="term-head">
+          <span class="term-title">TERMINAL</span>
+          <div class="term-btns" id="term-btns"></div>
+        </div>
+        <div class="term-out" id="term-out" role="log" aria-live="polite"></div>
+        <div class="term-in" id="term-in">
+          <span class="term-ps" id="term-ps" aria-hidden="true">~:/$</span>
+          <input type="text" id="term-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" placeholder="Type a command… (help)" aria-label="Terminal command">
+        </div>
+      </section>
+
+    </section>
+
+    <div class="vhandle" id="h-right" role="separator" aria-orientation="vertical" tabindex="0" aria-label="Resize the OpenRouter 2 panel width" title="Drag to resize · double tap to reset"></div>
+    <aside class="ai-panel panel-right" id="panel-ai-right" aria-label="OpenRouter 2 assistant"></aside>
+
+    <div class="scrim" id="scrim"></div>
+    <div class="drop-hint" id="drop-hint" hidden>Drop files or folders here to import them</div>
+  </div>
+
+  <footer class="statusbar" id="statusbar">
+    <span id="st-file">—</span>
+    <span id="st-save">Ready</span>
+    <button type="button" class="st-btn" id="st-proj" data-action="projects" title="Projects">Project: General</button>
+    <button type="button" class="st-btn" id="st-pos" data-action="goto" title="Go to line (Ctrl+G)">Ln 1, Col 1</button>
+    <button type="button" class="st-btn" id="st-prob" data-action="problems" hidden title="Syntax check">✓</button>
+    <span id="st-lang">Plain text</span>
+    <button type="button" class="st-btn" id="st-term" data-action="terminal" title="Show or hide the output (Ctrl+`)">Output</button>
+  </footer>
+
+  <!-- Selectores de archivos: sin filtro de tipo ni de tamaño -->
+  <input type="file" id="import-input" multiple hidden>
+  <input type="file" id="import-dir" webkitdirectory multiple hidden>
+
+  <!-- Ajustes de API (oculto hasta abrirlo desde IA) -->
+  <dialog id="settings-dlg" aria-labelledby="settings-title">
+    <div class="dlg-body">
+      <h3 id="settings-title">API settings</h3>
+      <p class="dlg-note">Your keys are encrypted on this device with your passphrase (AES-256-GCM) and are never part of the code. Leave a field empty to keep the current key.</p>
+
+      <div class="field-row vault-row"><span class="hint" id="set-vault-state"></span><button type="button" class="btn btn-ghost" id="set-vault-btn">Encrypt…</button></div>
+      <label class="field" hidden>
+        <span>Gemini key</span>
+        <div class="field-row">
+          <input type="password" id="set-gemini-key" autocomplete="off" spellcheck="false">
+          <button type="button" class="btn btn-ghost" id="clear-gemini-key" hidden>Remove</button>
+        </div>
+      </label>
+      <div class="field" hidden>
+        <span>Gemini model</span>
+        <div class="field-row">
+          <select id="set-gemini-model" aria-label="Gemini model"></select>
+          <button type="button" class="btn btn-ghost" id="refresh-models-settings">Load models</button>
+        </div>
+        <span class="hint">«Automatic» always uses the latest Flash. «Load models» reads the models available today from your Google AI Studio account.</span>
+      </div>
+
+      <label class="field">
+        <span>OpenRouter key</span>
+        <div class="field-row">
+          <input type="password" id="set-openrouter-key" autocomplete="off" spellcheck="false">
+          <button type="button" class="btn btn-ghost" id="clear-openrouter-key" hidden>Remove</button>
+        </div>
+      </label>
+      <label class="field">
+        <span>Model for OpenRouter 1 (left)</span>
+        <input type="text" id="set-openrouter-model" autocomplete="off" spellcheck="false" placeholder="openrouter/auto">
+      </label>
+      <label class="field">
+        <span>Model for OpenRouter 2 (right)</span>
+        <input type="text" id="set-openrouter-model-b" autocomplete="off" spellcheck="false" placeholder="openrouter/auto">
+      </label>
+
+      <label class="include-row"><input type="checkbox" id="set-fallback"><span>If one assistant reaches its limit, answer with the other one automatically</span></label>
+      <p class="dlg-msg" id="settings-msg" role="status"></p>
+      <div class="dlg-actions">
+        <button type="button" class="btn btn-ghost" id="settings-cancel">Close</button>
+        <button type="button" class="btn" id="settings-save">Save</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Diálogo genérico para pedir un texto -->
+  <dialog id="name-dlg" aria-labelledby="name-title">
+    <div class="dlg-body">
+      <h3 id="name-title">Name</h3>
+      <input type="text" id="name-input" autocomplete="off" spellcheck="false" maxlength="200">
+      <div class="dlg-actions">
+        <button type="button" class="btn btn-ghost" id="name-cancel">Cancel</button>
+        <button type="button" class="btn" id="name-ok">OK</button>
+      </div>
+    </div>
+  </dialog>
+
+
+  <!-- Proyectos -->
+  <dialog id="project-dlg" aria-labelledby="project-title">
+    <div class="dlg-body">
+      <h3 id="project-title">Projects</h3>
+      <p class="dlg-note">Each project has its own files and tabs. A project can be linked to a folder on your Chromebook : when you save, it is written there.</p>
+      <div class="proj-list" id="proj-list"></div>
+      <div class="proj-actions" id="proj-actions"></div>
+      <div class="dlg-actions"><button type="button" class="btn" id="project-close">Close</button></div>
+    </div>
+  </dialog>
+
+  <!-- Abrir archivo rápido / paleta de comandos -->
+  <dialog id="qo-dlg" class="palette" aria-label="Open a file or run a command">
+    <div class="dlg-body">
+      <input type="text" id="qo-input" autocomplete="off" spellcheck="false" placeholder="File name…  (&gt; commands · $ terminal)">
+      <ul class="qo-list" id="qo-list" role="listbox"></ul>
+    </div>
+  </dialog>
+
+
+
+  
+
+  <!-- Dónde guardar -->
+  <dialog id="vault-dlg" aria-labelledby="vault-title">
+    <div class="dlg-body">
+      <h3 id="vault-title">Protect your keys</h3>
+      <p class="dlg-note" id="vault-note"></p>
+      <label class="field"><span>Passphrase</span><input type="password" id="vault-pass" autocomplete="off" spellcheck="false"></label>
+      <label class="field" id="vault-pass2-wrap"><span>Repeat the passphrase</span><input type="password" id="vault-pass2" autocomplete="off" spellcheck="false"></label>
+      <p class="dlg-msg" id="vault-msg" role="status"></p>
+      <div class="dlg-actions">
+        <button type="button" class="btn btn-ghost" id="vault-cancel">Not now</button>
+        <button type="button" class="btn" id="vault-ok">Continue</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="save-dlg" aria-labelledby="save-title">
+    <div class="dlg-body">
+      <h3 id="save-title">Save file</h3>
+      <p class="dlg-note" id="save-note">Where do you want to save it?</p>
+      <button type="button" class="btn save-choice" id="save-app"><strong>Save in the app</strong><span>It stays in this browser and you see it in the file explorer.</span></button>
+      <button type="button" class="btn save-choice" id="save-device"><strong>Save on my device…</strong><span>You choose the folder and the name. Later Ctrl+S presses write there directly.</span></button>
+      <div class="dlg-actions"><button type="button" class="btn btn-ghost" id="save-cancel">Cancel</button></div>
+    </div>
+  </dialog>
+
+  <!-- Workflows / reglas: editar -->
+  <dialog id="wf-dlg" aria-labelledby="wf-title">
+    <div class="dlg-body">
+      <h3 id="wf-title">New workflow</h3>
+      <label class="field"><span>Name</span><input type="text" id="wf-name" autocomplete="off" spellcheck="false" maxlength="80"></label>
+      <label class="field" id="wf-desc-row"><span>Description (optional)</span><input type="text" id="wf-desc" autocomplete="off" maxlength="160"></label>
+      <label class="field" id="wf-scope-row"><span>Applies to</span><select id="wf-scope"></select></label>
+      <label class="field"><span>Content</span><textarea id="wf-text" rows="8" spellcheck="false"></textarea></label>
+      <p class="dlg-msg error" id="wf-msg" role="status"></p>
+      <div class="dlg-actions">
+        <button type="button" class="btn btn-ghost" id="wf-cancel">Cancel</button>
+        <button type="button" class="btn" id="wf-ok">Save</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Modelos de OpenRouter -->
+  <dialog id="or-dlg" class="palette wide" aria-labelledby="or-title">
+    <div class="dlg-body">
+      <h3 id="or-title">OpenRouter models</h3>
+      <div class="find-row">
+        <input type="text" id="or-q" autocomplete="off" spellcheck="false" placeholder="Search model (name or id)" aria-label="Search model">
+        <button type="button" class="btn btn-ghost sm" id="or-reload">↻ Refresh</button>
+      </div>
+      <div class="wf-tabs" id="or-tabs"></div>
+      <ul class="qo-list tall" id="or-list"></ul>
+      <p class="dlg-note" id="or-note"></p>
+      <div class="dlg-actions">
+        <button type="button" class="btn btn-ghost" id="or-use">Use the typed text as the id</button>
+        <button type="button" class="btn" id="or-close">Close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Diálogo informativo (atajos, acerca de) -->
+  <dialog id="info-dlg" aria-labelledby="info-title">
+    <div class="dlg-body">
+      <h3 id="info-title">Information</h3>
+      <div class="info-body" id="info-body"></div>
+      <div class="dlg-actions">
+        <button type="button" class="btn" id="info-close">Close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="boot.js"></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
