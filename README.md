@@ -15,7 +15,7 @@ Autosave is off by default: you decide when to save with Ctrl+S. The first time 
 In each panel, "Allow it to edit my code when I ask": if you ask for a change, it is applied in the editor (left unsaved; undo with Ctrl+Z or the button). Use @file to include other files. The AI answers with ```apply blocks (the older ```aplicar is still understood).
 
 ## VS Code-style sidebar
-Activity bar on the left: Explorer, Search, Source control (GitHub), Workflows and rules, OpenRouter, plus Appearance (palette icon). One click opens a view; another click on the same one closes it. Three icons at the top right show or hide the left column, the bottom Output panel and the right column (Gemini).
+Activity bar on the left: Explorer, Search, Source control (GitHub), Workflows and rules, OpenRouter, plus Appearance (palette icon). One click opens a view; another click on the same one closes it. Three icons at the top right show or hide the left column, the bottom Output panel and the right column (OpenRouter 2).
 
 ## Source control (GitHub)
 Connect your account with a token (a classic token with `repo` scope is the simplest; a fine-grained one needs Contents: Read and write and, to create repositories, Administration: Read and write). From there: Initialize repository, Publish to GitHub (creates the repo and uploads everything), Link an existing one, Clone, see changes (A/M/D), Commit and push (with an AI-written message ✨) and Pull changes. Everything uses the GitHub API: git is not needed.
@@ -24,7 +24,7 @@ Connect your account with a token (a classic token with `repo` scope is the simp
 Project → Projects…: each project has its own files and tabs. **Open Chromebook folder** links a real folder (e.g. from Linux files): saving writes into it, so git and wrangler in your Linux files see the same files. «Reload from folder» reads the disk again. .git and node_modules are skipped.
 
 ## Security (read this)
-- **Keys are encrypted.** Gemini/OpenRouter keys and the GitHub token are stored only encrypted (AES-256-GCM, key from your passphrase with PBKDF2 600,000 rounds). They are unlocked in memory for the session, locked automatically after 30 minutes of inactivity, and can be locked from AI → Lock keys. Old plaintext keys are migrated the first time you open the app. If you forget the passphrase there is no recovery: paste the keys again.
+- **Keys are encrypted.** OpenRouter keys and the GitHub token are stored only encrypted (AES-256-GCM, key from your passphrase with PBKDF2 600,000 rounds). They are unlocked in memory for the session, locked automatically after 30 minutes of inactivity, and can be locked from AI → Lock keys. Old plaintext keys are migrated the first time you open the app. If you forget the passphrase there is no recovery: paste the keys again.
 - **Safe preview (default).** The preview runs in an isolated frame with no access to the app, its storage or your keys. Project CSS, JS, images and fonts are inlined; links between project pages work; `console.log` and errors appear in the Output panel. Limitation: ES-module `import` between project files does not work there; switch the preview selector to **Full** (same origin, trusted code only).
 - Deploying with the supplied `_headers` adds a strict CSP and removes framing; the preview page has its own `sandbox` header.
 
@@ -56,12 +56,12 @@ When no file is open, the centre shows your recent files and shortcuts. On start
 Palette icon (or View → Appearance): VS Code-like themes (Dark+, Light+, Monokai, Dracula, One Dark, GitHub Dark, Solarized, Midnight), accent color, interface background color, and font size for the editor and for the interface.
 
 ## Autocomplete and AI suggestions
-Suggestions while you type (Tab/Enter accept, Esc closes, Ctrl+Space forces them) and auto-closing of ( [ { and quotes. **Alt+Enter** asks Gemini/OpenRouter to continue your code (Tab accepts, Esc dismisses). In Appearance you can turn on AI suggestions on pause (they use your AI quota). GitGuard prevents sending context that contains secrets.
+Suggestions while you type (Tab/Enter accept, Esc closes, Ctrl+Space forces them) and auto-closing of ( [ { and quotes. **Alt+Enter** asks OpenRouter to continue your code (Tab accepts, Esc dismisses). In Appearance you can turn on AI suggestions on pause (they use your AI quota). GitGuard prevents sending context that contains secrets.
 
 ## Workflows and rules
 Own panel in the activity bar.
 - **Workflows**: a recipe of steps. Each line is a step; lines starting with `$` run a terminal command (for example `$ node {{file}}` or `$ git push`) and the rest go to the AI. Run them with ▶ or by typing `/name` in the chat. Placeholders: `{{args}}`, `{{file}}` (current file), `{{project}}`.
-- **Rules**: fixed instructions added to every message sent to Gemini or OpenRouter. `AGENTS.md` and `.codecraft/rules.md` in the project are also read.
+- **Rules**: fixed instructions added to every message sent to OpenRouter. `AGENTS.md` and `.codecraft/rules.md` in the project are also read.
 
 ## GitGuard
 Before every push to GitHub it looks for keys, tokens and files like `.env`, and for your own saved keys. You can protect files so they are never pushed. It also warns before sending a secret to the AI.
@@ -79,7 +79,7 @@ In the OpenRouter panel, the small arrow next to the title shows the model selec
 - Keyboard: ↑ ↓ Home End to move, → expand, ← collapse / go to parent, Enter open, F2 rename, Delete delete.
 
 ## Other tools
-Ctrl+P opens a file, Ctrl+Shift+P the command palette, Ctrl+Shift+F searches all files. Light syntax highlighting (visible lines only). HTML preview (served from the Service Worker; reload once after installing if you see a 404). If Gemini or OpenRouter reach their limit, the other one answers (API settings).
+Ctrl+P opens a file, Ctrl+Shift+P the command palette, Ctrl+Shift+F searches all files. Light syntax highlighting (visible lines only). HTML preview (served from the Service Worker; reload once after installing if you see a 404). If OpenRouter reach their limit, the other one answers (API settings).
 
 ## Import / export (no restrictions)
 Files of any type and size, whole folders, drag and drop, `.zip` (it is unzipped) and `.json` backups. Non-text files are stored intact. Export one file, everything as `.zip`, or a `.json` backup.
@@ -106,3 +106,9 @@ The built-in terminal is virtual. To run real `git`, `npm`, `npx wrangler`, `pyt
 2. It prints a token. In CodeCraft's terminal type: `bridge connect TOKEN`.
 3. From then on, anything that is not a CodeCraft command runs for real (npm, wrangler, python…). Use `! git status` to force a real command (plain `git` stays the GitHub-API version). `cd` is remembered. Ctrl+C stops it. `bridge off` disconnects.
 It only listens on 127.0.0.1 and needs the token. Commands cannot ask for input (stdin is closed): use flags such as `-y`.
+
+
+## PyCharm Edition
+Default theme **Darcula (PyCharm)**. Run (Ctrl+Enter) on a `.py` file runs `python3` through cc-bridge.py (real Python from your Linux; nothing heavy in the browser). All APIs and features are unchanged.
+
+AI: two OpenRouter panels. Key 1 is required; key 2 is optional (if empty, panel 2 uses key 1). Gemini was removed.

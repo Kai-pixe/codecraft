@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#0f1016">
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Personal, minimalist, offline code editor with AI assistants.">
-  <title>CodeCraft</title>
+  <title>CodeCraft · PyCharm Edition</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
@@ -167,20 +167,20 @@
       <p class="dlg-note">Your keys are encrypted on this device with your passphrase (AES-256-GCM) and are never part of the code. Leave a field empty to keep the current key.</p>
 
       <div class="field-row vault-row"><span class="hint" id="set-vault-state"></span><button type="button" class="btn btn-ghost" id="set-vault-btn">Encrypt…</button></div>
-      <label class="field" hidden>
-        <span>Gemini key</span>
+      <label class="field">
+        <span>OpenRouter key 2 (optional)</span>
         <div class="field-row">
           <input type="password" id="set-gemini-key" autocomplete="off" spellcheck="false">
           <button type="button" class="btn btn-ghost" id="clear-gemini-key" hidden>Remove</button>
         </div>
       </label>
       <div class="field" hidden>
-        <span>Gemini model</span>
+        <span>Model</span>
         <div class="field-row">
           <select id="set-gemini-model" aria-label="Gemini model"></select>
           <button type="button" class="btn btn-ghost" id="refresh-models-settings">Load models</button>
         </div>
-        <span class="hint">«Automatic» always uses the latest Flash. «Load models» reads the models available today from your Google AI Studio account.</span>
+        <span class="hint">Not used.</span>
       </div>
 
       <label class="field">

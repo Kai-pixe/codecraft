@@ -917,3 +917,28 @@ dialog { background: var(--bg-menu); color: var(--text-main); }
 .recent-list button:hover, .recent-list button:focus-visible { background: var(--hover-bg); color: var(--text-strong); outline: none; }
 .recent-list small { color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 55%; }
 .welcome-keys { color: var(--text-muted); font-size: calc(11.5px * var(--uis)); line-height: 1.6; text-align: center; margin-bottom: 0; }
+
+/* ===== PyCharm Edition: aspecto tipo JetBrains (Darcula) ===== */
+html, body { font-size: 13px; }
+*, *::before, *::after { border-radius: 0 !important; }
+.btn, .icon-btn, input, select, textarea, .dlg, .menu, .ac-pop { border-radius: 3px !important; }
+.toolbar { background: var(--bg-toolbar); border-bottom: 1px solid #323232; min-height: 34px; }
+.menu-trigger { padding: 4px 9px; font-size: 13px; }
+.activitybar { background: var(--bg-toolbar); border-right: 1px solid #323232; width: 40px; }
+.activitybar button { opacity: .75; }
+.activitybar button:hover, .activitybar button.active { opacity: 1; background: rgba(255,255,255,.08); }
+.activitybar button.active { box-shadow: inset 2px 0 0 var(--accent-color); }
+.sidebar-header { background: var(--bg-sidebar); border-bottom: 1px solid #323232; text-transform: none; font-weight: 400; font-size: 13px; }
+.sidebar-header h3 { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 13px; }
+.tabbar { background: var(--bg-sidebar); border-bottom: 1px solid #323232; }
+.tab { background: transparent; border: 0; border-right: 1px solid #323232; padding: 0 12px; height: 34px; color: #9a9a9a; font-size: 13px; }
+.tab.current { background: var(--bg-main); color: #e0e0e0; box-shadow: inset 0 -3px 0 var(--accent-color); }
+.gutter { background: #313335; color: #606366; border-right: 1px solid #323232; }
+.statusbar { background: var(--bg-sidebar); color: #9a9a9a; border-top: 1px solid #323232; font-size: 12px; min-height: 24px; }
+.ex-tree .tr:hover { background: rgba(255,255,255,.06); }
+.ex-tree .tr.sel { background: #0d293e; }
+.ex-tree:focus-within .tr.sel { background: #2f65ca; color: #fff; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #4e5254; border: 2px solid var(--bg-main); }
+::-webkit-scrollbar-thumb:hover { background: #5f6365; }
+::-webkit-scrollbar-track { background: transparent; }

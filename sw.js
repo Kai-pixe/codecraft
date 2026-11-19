@@ -1,7 +1,7 @@
 'use strict';
 
 // Sube el número de versión cada vez que cambies archivos de la app
-const CACHE = 'codecraft-v20';
+const CACHE = 'codecraft-v22';
 const ASSETS = [
   './',
   './index.html',

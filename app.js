@@ -143,8 +143,7 @@
     set: {
       dlg: $('settings-dlg'),
       gKey: $('set-gemini-key'),
-      gModel: $('set-gemini-model'),
-      oModelB: $('set-openrouter-model-b'),
+            oModelB: $('set-openrouter-model-b'),
       oKey: $('set-openrouter-key'),
       oModel: $('set-openrouter-model'),
       gClear: $('clear-gemini-key'),
@@ -198,7 +197,7 @@
     remove(k) { try { localStorage.removeItem(k); } catch (_) { /* nada */ } }
   };
 
-  const PREF_DEFAULTS = { leftView: 'explorer', lw: 320, rw: 340, th: 220, left: true, right: true, term: true, termN: false, wrap: false, fs: 16, uis: 1.1, theme: 'forja', pvmode: 'safe', pdev: 0, accent: null, uibg: null, ac: true, pairs: true, closed: [] };
+  const PREF_DEFAULTS = { leftView: 'explorer', lw: 320, rw: 340, th: 220, left: true, right: true, term: true, termN: false, wrap: false, fs: 16, uis: 1.1, theme: 'darcula', pvmode: 'safe', pdev: 0, accent: null, uibg: null, ac: true, pairs: true, closed: [] };
   const prefs = Object.assign({}, PREF_DEFAULTS);
   try { Object.assign(prefs, JSON.parse(store.get('cc_prefs') || '{}')); } catch (_) { /* valores por defecto */ }
   if (!prefs.v) { if (prefs.fs === 14) prefs.fs = 16; prefs.v = 2; }
@@ -2330,8 +2329,8 @@
     let base;
     if (res.status === 400) base = 'The request was rejected (400). Check the model or the content sent.';
     else if (res.status === 401 || res.status === 403) base = 'Invalid key or missing permissions. Check it in AI → API settings.';
-    else if (res.status === 404) base = provider === 'gemini'
-      ? 'Model not available. Choose it again in the selector and press ↻ to load the current models.'
+    else if (res.status === 404) base = false
+      ? ''
       : 'Model not found. Check the model name in the OpenRouter panel.';
     else if (res.status === 429) base = 'Usage limit reached. Wait a moment and try again.';
     else if (res.status >= 500) base = 'The AI service is not available right now. Try again later.';
@@ -2341,33 +2340,6 @@
     return err;
   }
 
-  async function callGemini(messages, signal, system) {
-    const key = secret('gemini_key').trim();
-    if (!key) throw new AIError('Gemini key is missing. Go to AI → API settings.');
-    const model = (store.get('gemini_model') || PROVIDERS.gemini.defaultModel).trim();
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: system || SYSTEM_PROMPT }] },
-          contents: messages.map((m) => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] }))
-        }),
-        signal
-      }
-    );
-    const data = await readJson(res);
-    if (!res.ok) throw httpError(res, data, 'gemini');
-    const cand = data && data.candidates && data.candidates[0];
-    const parts = cand && cand.content && cand.content.parts;
-    const text = parts ? parts.map((p) => p.text || '').join('') : '';
-    if (!text) {
-      const reason = (data && data.promptFeedback && data.promptFeedback.blockReason) || (cand && cand.finishReason);
-      throw new AIError('The AI returned no text' + (reason ? ` (${reason}).` : '.'));
-    }
-    return text;
-  }
 
   // ---- Lista de modelos Gemini: se lee en vivo de la cuenta del usuario ----
   function modelRank(id) {
@@ -2398,26 +2370,7 @@
     return out;
   }
 
-  async function fetchGeminiModels() {
-    const key = secret('gemini_key').trim();
-    if (!key) throw new AIError('First save your Gemini key in API settings.');
-    if (!navigator.onLine) throw new AIError('No internet connection.');
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 20000);
-    try {
-      const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000', {
-        headers: { 'x-goog-api-key': key },
-        signal: ctrl.signal
-      });
-      const data = await readJson(res);
-      if (!res.ok) throw httpError(res, data, 'gemini');
-      const list = pickChatModels(data && data.models);
-      if (!list.length) throw new AIError('Your account returned no compatible chat models.');
-      return list;
-    } finally {
-      clearTimeout(timer);
-    }
-  }
+  async function fetchGeminiModels() { return []; }
 
   function readModelCache() {
     try {
@@ -2463,7 +2416,7 @@
     btn.textContent = '…';
     try {
       const typed = els.set.dlg.open ? els.set.gKey.value.trim() : '';
-      if (typed) { if (!(await setSecret('gemini_key', typed))) throw new Error('The key was not saved (keys are locked).'); els.set.gKey.value = ''; refreshSettingsHints(); }
+      if (typed) { if (!(await setSecret('openrouter_key_b', typed))) throw new Error('The key was not saved (keys are locked).'); els.set.gKey.value = ''; refreshSettingsHints(); }
       const list = await loadModels();
       const newest = list.find((m) => !/-latest$/.test(m.id));
       notify(`${list.length} models loaded` + (newest ? `. Newest: ${newest.id}` : '.'), false);
@@ -2476,7 +2429,7 @@
   }
 
   async function callOpenRouter(messages, signal, system, provider) {
-    const key = secret('openrouter_key').trim();
+    const key = ((provider === 'gemini' && secret('openrouter_key_b').trim()) || secret('openrouter_key').trim());
     if (!key) throw new AIError('OpenRouter key is missing. Go to AI → API settings.');
     const model = (store.get(PROVIDERS[provider || 'openrouter'].modelName) || 'openrouter/auto').trim();
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -2518,7 +2471,7 @@
   }
 
   function hasKey(provider) {
-    return !!secret(PROVIDERS[provider].keyName).trim();
+    return !!(secret(PROVIDERS[provider].keyName).trim() || (provider === 'gemini' && secret('openrouter_key_b').trim()));
   }
 
   function scrollChat(provider) { const b = ui[provider].chat; b.scrollTop = b.scrollHeight; }
@@ -2851,7 +2804,7 @@
       ));
     let modelRow;
     if (false) {
-      u.model = h('select', { 'aria-label': 'Gemini model' });
+      u.model = h('select', { 'aria-label': 'Model' });
       u.refresh = h('button', { class: 'btn btn-ghost', type: 'button', title: 'Load the latest models from your account', 'aria-label': 'Refresh model list', text: '↻' });
       modelRow = h('div', { class: 'model-row' }, u.model, u.refresh);
     } else {
@@ -2907,7 +2860,7 @@
   // ---------------------------------------------------------------
   // Llaves y tokens cifrados (AES-256-GCM, clave derivada con PBKDF2 de tu frase)
   // ---------------------------------------------------------------
-  const SECRETS = ['gemini_key', 'openrouter_key', 'github_token'];
+  const SECRETS = ['openrouter_key_b', 'openrouter_key', 'github_token'];
   const sec = { map: {}, key: null, salt: null, state: 'none', idle: 0 };   // none | locked | open
   const legacyKeys = () => SECRETS.filter((n) => (store.get(n) || '').trim());
   const secret = (n) => sec.map[n] || (sec.state === 'none' ? (store.get(n) || '') : '');
@@ -2959,7 +2912,7 @@
       $('vault-title').textContent = create ? 'Protect your keys' : 'Unlock your keys';
       $('vault-note').textContent = create
         ? 'Choose a passphrase (10+ characters). Your API keys and GitHub token are encrypted with it (AES-256-GCM) before they touch the disk. If you forget it they cannot be recovered; you would paste them again.'
-        : 'Type your passphrase to use Gemini, OpenRouter and GitHub in this session.';
+        : 'Type your passphrase to use OpenRouter and GitHub in this session.';
       $('vault-pass2-wrap').hidden = !create;
       p1.value = ''; p2.value = ''; msg.textContent = ''; msg.classList.remove('error');
       let result = false, busy = false;
@@ -3017,7 +2970,7 @@
     const s = els.set;
     const g = hasKey('gemini');
     const o = hasKey('openrouter');
-    s.gKey.placeholder = g ? 'Key saved — type to replace it' : 'Paste your Gemini key';
+    s.gKey.placeholder = g ? 'Key saved — type to replace it' : 'Paste your OpenRouter key 2 (optional; if empty, key 1 is used)';
     s.oKey.placeholder = o ? 'Key saved — type to replace it' : 'Paste your OpenRouter key';
     s.gClear.hidden = !g;
     s.oClear.hidden = !o;
@@ -3056,12 +3009,10 @@
     const gk = s.gKey.value.trim();
     const ok2 = s.oKey.value.trim();
     if ((gk || ok2) && !(await ensureVault())) { settingsMessage('Not saved: your keys are only stored encrypted, so a passphrase is required.', true); return; }
-    if (gk) ok = (await setSecret('gemini_key', gk)) && ok;
+    if (gk) ok = (await setSecret('openrouter_key_b', gk)) && ok;
     if (ok2) ok = (await setSecret('openrouter_key', ok2)) && ok;
     store.set('cc_ai_fallback', $('set-fallback').checked ? 'on' : 'off');
-    const gm = (s.gModel.value || '').trim();
     const om = s.oModel.value.trim();
-    if (gm) ok = store.set('gemini_model', gm) && ok; else store.remove('gemini_model');
     if (om) ok = store.set('openrouter_model', om) && ok; else store.remove('openrouter_model');
     const omb = s.oModelB.value.trim();
     if (omb) ok = store.set('openrouter_model_b', omb) && ok; else store.remove('openrouter_model_b');
@@ -3840,7 +3791,7 @@
 
   async function aiCommitMessage() {
     const provider = hasKey('gemini') ? 'gemini' : (hasKey('openrouter') ? 'openrouter' : null);
-    if (!provider) { gitNote('Save a Gemini or OpenRouter key in API settings.', true); return; }
+    if (!provider) { gitNote('Save a OpenRouter key in API settings.', true); return; }
     if (!git.changes.length) { gitNote('No changes.'); return; }
     let txt = git.changes.slice(0, 15).map((c) => `${c.st} ${c.name}`).join('\n');
     for (const c of git.changes.filter((x) => x.st !== 'D' && x.f && !x.f.binary).slice(0, 4)) txt += `\n\n--- ${c.name} ---\n${(await getText(c.f)).slice(0, 700)}`;
@@ -3860,7 +3811,7 @@
   function gitConnectForm(body, errText) {
     const tok = h('input', { type: 'password', id: 'git-token', placeholder: 'Paste your GitHub token', autocomplete: 'off', spellcheck: 'false' });
     body.replaceChildren(
-      h('p', { class: 'dlg-note', text: 'Connect your GitHub account with a personal token (Gemini and OpenRouter cannot access GitHub: the app itself does it). Use a «fine-grained» token only for your repositories, with Contents: Read and write permission (and Administration: Read and write if you want to create repositories from here). It is stored only on this device.' }),
+      h('p', { class: 'dlg-note', text: 'Connect your GitHub account with a personal token (OpenRouter cannot access GitHub: the app itself does it). Use a «fine-grained» token only for your repositories, with Contents: Read and write permission (and Administration: Read and write if you want to create repositories from here). It is stored only on this device.' }),
       h('button', { class: 'btn btn-ghost', type: 'button', text: 'Create a token on GitHub ↗', onclick: () => window.open('https://github.com/settings/personal-access-tokens/new', '_blank', 'noopener') }),
       tok,
       h('button', { class: 'btn', type: 'button', text: 'Connect to GitHub', onclick: () => gitRun('Checking the token…', async () => {
@@ -4917,6 +4868,7 @@
   // NUEVO · Temas de color, apariencia y tamaños de letra
   // ===============================================================
   const THEMES = {
+    darcula: { name: 'Darcula (PyCharm)', v: { '--bg-main': '#2b2b2b', '--bg-sidebar': '#3c3f41', '--bg-toolbar': '#3c3f41', '--bg-menu': '#3c3f41', '--text-main': '#bbbbbb', '--text-strong': '#ffffff', '--text-muted': '#808080', '--accent-color': '#4b6eaf', '--accent-hover': '#6c8ccf', '--border-glow': 'rgba(255,255,255,0.08)', '--ed-text': '#a9b7c6', '--gutter-text': '#606366', '--tk-c': '#808080', '--tk-s': '#6a8759', '--tk-n': '#6897bb', '--tk-k': '#cc7832', '--tk-t': '#a9b7c6', '--tk-p': '#94558d', '--tk-f': '#ffc66d' } },
     forja: { name: 'Forja Dark (recommended)', v: { '--bg-main': '#171b22', '--bg-sidebar': '#12161d', '--bg-toolbar': '#0e1116', '--bg-menu': '#1d222b', '--text-main': '#c9d3e0', '--text-strong': '#f2f5f9', '--text-muted': '#8593a6', '--accent-color': '#3b6fe0', '--accent-hover': '#7aa2ff', '--border-glow': 'rgba(148,163,184,0.14)', '--soft-bg': 'rgba(148,163,184,0.09)', '--input-bg': 'rgba(0,0,0,0.25)', '--ed-text': '#d6deeb', '--gutter-text': '#66748a', '--tk-c': '#6b7a8f', '--tk-s': '#8fd694', '--tk-n': '#f2a672', '--tk-k': '#c0a0ff', '--tk-t': '#5ccfe6', '--tk-p': '#9ecbff', '--tk-f': '#ffd479', '--ok': '#56d364', '--danger': '#f47067', '--warn': '#e3b341' } },
     'forja-light': { name: 'Forja Light', light: true, v: { '--bg-main': '#fbfcfe', '--bg-sidebar': '#f1f4f8', '--bg-toolbar': '#e6ebf2', '--bg-menu': '#ffffff', '--text-main': '#1f2937', '--text-strong': '#0b1220', '--text-muted': '#5b6678', '--accent-color': '#2457d6', '--accent-hover': '#1b46b0', '--border-glow': 'rgba(15,23,42,0.13)', '--soft-bg': 'rgba(15,23,42,0.06)', '--input-bg': 'rgba(15,23,42,0.045)', '--ed-text': '#1f2937', '--gutter-text': '#7a8699', '--tk-c': '#6b7686', '--tk-s': '#0f7b3a', '--tk-n': '#b45309', '--tk-k': '#6d3fd1', '--tk-t': '#0b7285', '--tk-p': '#1d4ed8', '--tk-f': '#8a5a00', '--ok': '#1a7f37', '--danger': '#cf222e', '--warn': '#9a6700' } },
     'dark-plus': { name: 'Dark+ (VS Code)', v: { '--bg-main': '#1e1e1e', '--bg-sidebar': '#252526', '--bg-toolbar': '#333333', '--bg-menu': '#252526', '--text-main': '#cccccc', '--text-strong': '#ffffff', '--text-muted': '#8b8b8b', '--accent-color': '#0e639c', '--accent-hover': '#1c97ea', '--border-glow': 'rgba(255,255,255,0.10)', '--ed-text': '#d4d4d4', '--gutter-text': '#6e7681', '--tk-c': '#6a9955', '--tk-s': '#ce9178', '--tk-n': '#b5cea8', '--tk-k': '#569cd6', '--tk-t': '#4ec9b0', '--tk-p': '#9cdcfe', '--tk-f': '#dcdcaa' } },
@@ -5308,7 +5260,7 @@
   function guardScanText(text, name) {
     const out = [];
     if (!text) return out;
-    const myKeys = ['gemini_key', 'openrouter_key', 'github_token'].map((k) => [k, secret(k).trim()]).filter(([, v]) => v.length >= 12);
+    const myKeys = ['openrouter_key_b', 'openrouter_key', 'github_token'].map((k) => [k, secret(k).trim()]).filter(([, v]) => v.length >= 12);
     const lines = text.slice(0, 2000000).split('\n');
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -5506,7 +5458,7 @@
       nodes.push(h('button', { type: 'button', class: 'btn', text: '＋ New workflow', onclick: async () => { const r = await editItem('wf', null); if (r) { saveWf(list.concat(r)); renderWorkflow(); } } }));
     } else {
       const list = ruList();
-      nodes.push(h('p', { class: 'dlg-note', text: 'Active rules are added to every message you send to Gemini or OpenRouter. The AGENTS.md and .codecraft/rules.md files of the project are also read, if they exist.' }));
+      nodes.push(h('p', { class: 'dlg-note', text: 'Active rules are added to every message you send to OpenRouter. The AGENTS.md and .codecraft/rules.md files of the project are also read, if they exist.' }));
       list.forEach((r) => {
         const cb = h('input', { type: 'checkbox', 'aria-label': 'Enable ' + r.name }); cb.checked = !!r.on;
         cb.addEventListener('change', () => { r.on = cb.checked; saveRu(list); refreshRulesNote(); });
@@ -5604,6 +5556,12 @@
     if (f.binary) { toast('A binary file cannot be run.', 'err'); return; }
     if (/^html?$/.test(ext)) { setPreview(true); return; }
     if (ext === 'js' || ext === 'mjs') { await runFile(f); return; }
+    if (ext === 'py') {
+      if (!bridge.on) { toast('To run Python: in Linux run python3 cc-bridge.py, then in the terminal: bridge connect TOKEN', 'err'); return; }
+      tprint('$ python3 ' + (f.path || f.name), 'dim');
+      await bridgeRun('python3 "' + String(f.path || f.name).replace(/"/g, '') + '"');
+      return;
+    }
     toast(`.${ext || 'extensionless'} files cannot be run here. HTML opens in the preview and .js runs in the browser.`, 'err');
   }
 
@@ -5739,7 +5697,7 @@
     step('menus', buildMenus);
     step('toolbar', buildQuickTools);
     step('activity bar', buildActivityBar);
-    step('Gemini panel', () => buildPanel('gemini'));
+    step('OpenRouter 2 panel', () => buildPanel('gemini'));
     step('OpenRouter panel', () => buildPanel('openrouter'));
     step('models', populateModelSelects);
     step('drag handles', setupHandles);
