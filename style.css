@@ -918,27 +918,64 @@ dialog { background: var(--bg-menu); color: var(--text-main); }
 .recent-list small { color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 55%; }
 .welcome-keys { color: var(--text-muted); font-size: calc(11.5px * var(--uis)); line-height: 1.6; text-align: center; margin-bottom: 0; }
 
-/* ===== PyCharm Edition: aspecto tipo JetBrains (Darcula) ===== */
-html, body { font-size: 13px; }
-*, *::before, *::after { border-radius: 0 !important; }
-.btn, .icon-btn, input, select, textarea, .dlg, .menu, .ac-pop { border-radius: 3px !important; }
-.toolbar { background: var(--bg-toolbar); border-bottom: 1px solid #323232; min-height: 34px; }
-.menu-trigger { padding: 4px 9px; font-size: 13px; }
-.activitybar { background: var(--bg-toolbar); border-right: 1px solid #323232; width: 40px; }
-.activitybar button { opacity: .75; }
-.activitybar button:hover, .activitybar button.active { opacity: 1; background: rgba(255,255,255,.08); }
-.activitybar button.active { box-shadow: inset 2px 0 0 var(--accent-color); }
-.sidebar-header { background: var(--bg-sidebar); border-bottom: 1px solid #323232; text-transform: none; font-weight: 400; font-size: 13px; }
-.sidebar-header h3 { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 13px; }
-.tabbar { background: var(--bg-sidebar); border-bottom: 1px solid #323232; }
-.tab { background: transparent; border: 0; border-right: 1px solid #323232; padding: 0 12px; height: 34px; color: #9a9a9a; font-size: 13px; }
-.tab.current { background: var(--bg-main); color: #e0e0e0; box-shadow: inset 0 -3px 0 var(--accent-color); }
-.gutter { background: #313335; color: #606366; border-right: 1px solid #323232; }
-.statusbar { background: var(--bg-sidebar); color: #9a9a9a; border-top: 1px solid #323232; font-size: 12px; min-height: 24px; }
-.ex-tree .tr:hover { background: rgba(255,255,255,.06); }
-.ex-tree .tr.sel { background: #0d293e; }
-.ex-tree:focus-within .tr.sel { background: #2f65ca; color: #fff; }
+/* ===== PyCharm Edition (New UI, dark) ===== */
+body { font-size: 13px; }
+#code-editor, .hl, .gutter, .term-out { font-family: 'JetBrains Mono', 'Cascadia Mono', 'Droid Sans Mono', Menlo, Consolas, monospace; }
+/* barra superior */
+.toolbar { height: 40px; background: #2b2d30; border-bottom: 1px solid #1e1f22; gap: 2px; padding: 0 8px; }
+.pc-proj { display: flex; align-items: center; gap: 6px; margin: 0 8px 0 0; font-weight: 400; }
+.pc-logo { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 6px; font: 700 11px/1 Arial, sans-serif; color: #000; background: linear-gradient(135deg, #21d789 0%, #fcf84a 70%); box-shadow: inset 4px 4px 0 -2px rgba(0,0,0,.0); }
+.pc-pill { background: none; border: 0; color: #dfe1e5; font: inherit; font-size: 13px; padding: 5px 9px; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+.pc-pill:hover { background: #393b40; }
+.pc-pill i, .pc-cfg i { font-style: normal; font-size: 10px; color: #868a91; margin-left: 3px; }
+.pc-vcs { color: #bcbec4; }
+.menu-trigger { min-height: 28px; padding: 0 9px; border-radius: 6px; font-size: 13px; color: #dfe1e5; }
+.menu-trigger:hover, .menu-trigger.active { background: #393b40; }
+.pc-run { margin-left: auto; display: flex; align-items: center; gap: 4px; flex: none; }
+.pc-cfg { background: none; border: 1px solid #43454a; color: #dfe1e5; font: inherit; font-size: 13px; padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+.pc-cfg:hover { background: #393b40; }
+.pc-go { width: 28px; height: 28px; border: 0; border-radius: 6px; background: none; color: #5fb865; font-size: 15px; cursor: pointer; }
+.pc-go:hover { background: #393b40; }
+.toolbar-tools { margin-left: 4px; }
+/* franja de herramientas izquierda */
+.activitybar { width: 40px; padding: 6px 0; gap: 4px; background: #2b2d30; border-right: 1px solid #1e1f22; }
+.act-btn { width: 30px; height: 30px; border: 0; border-radius: 6px; color: #9da0a8; }
+.act-btn:hover { background: #393b40; color: #dfe1e5; }
+.act-btn[aria-pressed="true"] { background: #43454a; color: #fff; }
+/* ventana de herramientas Project */
+.panel-left, .panel-right { background: #2b2d30; }
+.sidebar-header { padding: 4px 8px 4px 12px; min-height: 30px; border-bottom: 0; background: #2b2d30; }
+.sidebar-header h3 { font-size: 13px; font-weight: 400; color: #dfe1e5; text-transform: none; letter-spacing: 0; }
+.sidebar-header h3::after { content: " ▾"; font-size: 10px; color: #868a91; }
+.ex-root { border-bottom: 0; }
+.ex-tree .tr { min-height: 24px; font-size: 13px; }
+.ex-tree .tr:hover { background: #2f3136; }
+.ex-tree .tr.sel { background: #43454a; }
+.ex-tree:focus-within .tr.sel { background: #2e436e; color: #fff; }
+/* pestañas del editor */
+.tabbar { height: 34px; background: #2b2d30; border-bottom: 1px solid #1e1f22; }
+.tab { height: 34px; padding: 0 6px 0 12px; border: 0; border-top: 0; color: #9da0a8; font-size: 13px; position: relative; }
+.tab:hover { background: #2f3136; color: #dfe1e5; }
+.tab.current { background: #1e1f22; color: #fff; }
+.tab.current::after { content: ""; position: absolute; left: 6px; right: 6px; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: #3574f0; }
+/* editor */
+.editor-wrap, .center { background: #1e1f22; }
+.gutter { background: #1e1f22; color: #4b5059; border-right: 0; }
+/* ventana Terminal */
+.terminal { background: #1e1f22; border-top: 1px solid #2b2d30; }
+.term-head { background: #2b2d30; height: 30px; border-bottom: 1px solid #1e1f22; }
+.term-title { text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 400; color: #dfe1e5; }
+.term-in { background: #1e1f22; }
+/* barra de estado */
+.statusbar { background: #2b2d30; border-top: 1px solid #1e1f22; color: #9da0a8; font-size: 12px; min-height: 24px; padding-top: 0; padding-bottom: calc(0px + var(--sab)); gap: 14px; }
+.statusbar #st-file { order: 0; color: #9da0a8; }
+.statusbar #st-pos { order: 2; } .statusbar #st-lf { order: 3; } .statusbar #st-enc { order: 4; } .statusbar #st-ind { order: 5; }
+.statusbar #st-lang { order: 6; } .statusbar #st-prob { order: 1; } .statusbar #st-term { order: 7; }
+.statusbar #st-save, .statusbar #st-proj { order: 8; }
+.statusbar .st-btn:hover { background: #393b40; color: #fff; }
+/* barras de desplazamiento tipo JetBrains */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: #4e5254; border: 2px solid var(--bg-main); }
-::-webkit-scrollbar-thumb:hover { background: #5f6365; }
+::-webkit-scrollbar-thumb { background: rgba(134,138,145,.35); border: 2px solid transparent; background-clip: padding-box; border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(134,138,145,.6); background-clip: padding-box; }
 ::-webkit-scrollbar-track { background: transparent; }
+@media (max-width: 760px) { .pc-vcs, .pc-cfg, .pc-static { display: none; } }

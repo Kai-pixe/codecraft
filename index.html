@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://generativelanguage.googleapis.com https://openrouter.ai https://api.github.com http://127.0.0.1:* http://localhost:*; frame-src 'self'; manifest-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
-  <meta name="theme-color" content="#0f1016">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://openrouter.ai https://api.github.com http://127.0.0.1:* http://localhost:*; frame-src 'self'; manifest-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="theme-color" content="#2b2d30">
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Personal, minimalist, offline code editor with AI assistants.">
   <title>CodeCraft · PyCharm Edition</title>
@@ -18,8 +18,9 @@
   <!-- Barra de herramientas: los menús y botones los genera app.js -->
   <header class="toolbar" id="toolbar">
     <button class="icon-btn" id="btn-files" type="button" data-action="files" aria-label="File explorer" title="Files (Ctrl+B)"></button>
-    <div class="toolbar-brand">CodeCraft</div>
+    <div class="toolbar-brand pc-proj"><span class="pc-logo">PC</span><button type="button" class="pc-pill" data-action="projects" title="Projects">codecraft <i>▾</i></button><span class="pc-pill pc-vcs">⑂ main <i>▾</i></span></div>
     <nav class="toolbar-nav" id="menubar" aria-label="Menus"></nav>
+    <div class="pc-run"><button type="button" class="pc-cfg" data-action="run" title="Run configuration">Current File <i>▾</i></button><button type="button" class="pc-go" data-action="run" title="Run (Ctrl+Enter)" aria-label="Run">▶</button></div>
     <div class="toolbar-tools" id="quick-tools"></div>
   </header>
 
@@ -31,7 +32,7 @@
     <aside class="ai-panel panel-left" id="panel-left" aria-label="Sidebar">
       <section class="view" data-view="explorer" id="view-explorer">
         <div class="sidebar-header">
-          <h3>EXPLORER <span class="muted" id="files-count"></span></h3>
+          <h3>Project <span class="muted" id="files-count"></span></h3>
           <button type="button" class="icon-btn sm" data-action="toggle-left" aria-label="Close sidebar" title="Close sidebar"></button>
         </div>
         <div class="ex-root" id="drawer-actions"></div>
@@ -115,7 +116,7 @@
         <div class="vsplit" id="h-prev" role="separator" aria-orientation="vertical" tabindex="0" aria-label="Resize the preview width" hidden></div>
         <section class="preview" id="preview" aria-label="Preview" hidden>
           <div class="preview-head">
-            <span class="term-title">PREVIEW</span>
+            <span class="term-title">Preview</span>
             <div class="term-btns" id="preview-btns"></div>
           </div>
           <iframe id="preview-frame" title="Project preview" sandbox="allow-scripts allow-forms allow-modals allow-popups"></iframe>
@@ -127,7 +128,7 @@
       <!-- Salida (solo lectura) -->
       <section class="terminal" id="terminal" aria-label="Terminal">
         <div class="term-head">
-          <span class="term-title">TERMINAL</span>
+          <span class="term-title">Terminal</span>
           <div class="term-btns" id="term-btns"></div>
         </div>
         <div class="term-out" id="term-out" role="log" aria-live="polite"></div>
@@ -152,6 +153,7 @@
     <button type="button" class="st-btn" id="st-proj" data-action="projects" title="Projects">Project: General</button>
     <button type="button" class="st-btn" id="st-pos" data-action="goto" title="Go to line (Ctrl+G)">Ln 1, Col 1</button>
     <button type="button" class="st-btn" id="st-prob" data-action="problems" hidden title="Syntax check">✓</button>
+    <span class="pc-static" id="st-lf">LF</span><span class="pc-static" id="st-enc">UTF-8</span><span class="pc-static" id="st-ind">4 spaces</span>
     <span id="st-lang">Plain text</span>
     <button type="button" class="st-btn" id="st-term" data-action="terminal" title="Show or hide the output (Ctrl+`)">Output</button>
   </footer>
